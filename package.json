@@ -1,0 +1,55 @@
+{
+  "name": "lasec-git-session",
+  "displayName": "LasecGitSession",
+  "description": "Extensao para laboratorios compartilhados que prepara e encerra com seguranca a sessao global de Git e GitHub de cada aluno.",
+  "version": "0.1.0",
+  "publisher": "josuemoraisgh",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josuemoraisgh/LasecGitSession"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "lasecGitSession.startSession",
+        "title": "LasecGitSession: Iniciar Sessao"
+      },
+      {
+        "command": "lasecGitSession.endSession",
+        "title": "LasecGitSession: Encerrar Aula"
+      },
+      {
+        "command": "lasecGitSession.switchStudent",
+        "title": "LasecGitSession: Trocar Aluno"
+      },
+      {
+        "command": "lasecGitSession.showStatus",
+        "title": "LasecGitSession: Ver Status Atual"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc --noEmit -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/vscode": "^1.91.0",
+    "@vscode/vsce": "^3.2.2",
+    "typescript": "^5.6.3"
+  }
+}
