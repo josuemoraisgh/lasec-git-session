@@ -133,7 +133,10 @@ export class SessionController {
 
       await this.confirmReplacementIfNeeded('switch', globalIdentity, storedSession);
 
-      await this.services.authService.clearSessionPreference(storedSession);
+      if (storedSession?.githubAccountLabel) {
+        await this.services.gitService.clearGitHubCredentials(storedSession.githubAccountLabel);
+      }
+      await this.services.authService.signOutStoredGitHubAccount(storedSession);
 
       const authSession = await this.services.authService.signIn({
         forceNewSession: true,
@@ -181,23 +184,38 @@ export class SessionController {
       }
 
       await this.services.gitService.clearGlobalIdentity();
-      const cleanupResult = await this.services.credentialCleanupService.cleanupGlobalCredentialResidues();
-      const authDisconnectResult = await this.services.authService.clearSessionPreference(
-        storedSession
-      );
 
+      if (storedSession?.githubAccountLabel) {
+        await this.services.gitService.clearGitHubCredentials(storedSession.githubAccountLabel);
+      }
+
+      const cleanupResult = await this.services.credentialCleanupService.cleanupGlobalCredentialResidues();
+      const authDisconnectResult =
+        await this.services.authService.signOutStoredGitHubAccount(storedSession);
       await this.services.sessionService.clearSession();
 
       const extrasMessage =
         cleanupResult.removed.length > 0
-          ? ` Tambem foram removidas configuracoes globais extras: ${cleanupResult.removed
-              .map((item) => item.key)
-              .join(', ')}.`
+          ? ` Tambem removidas: ${cleanupResult.removed.map((item) => item.key).join(', ')}.`
           : '';
 
-      vscode.window.showInformationMessage(
-        `A identidade global do Git foi removida.${extrasMessage} ${authDisconnectResult.note}`
+      const message =
+        `A identidade global do Git e as credenciais foram removidas.${extrasMessage} ` +
+        authDisconnectResult.note;
+
+      if (authDisconnectResult.fullLogoutSupported || !storedSession?.githubAccountLabel) {
+        vscode.window.showInformationMessage(message);
+        return;
+      }
+
+      const action = await vscode.window.showWarningMessage(
+        message,
+        'Abrir contas do VS Code'
       );
+
+      if (action === 'Abrir contas do VS Code') {
+        await vscode.commands.executeCommand('workbench.action.manageAccounts');
+      }
     });
   }
 

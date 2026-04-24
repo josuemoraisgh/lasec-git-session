@@ -1,4 +1,4 @@
-import { execFile, ExecFileException } from 'node:child_process';
+import { execFile, ExecFileException, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import {
   GIT_COMMAND_TIMEOUT_MS,
@@ -89,6 +89,26 @@ export class GitService {
     }
   }
 
+  /**
+   * Rejeita (apaga) as credenciais HTTPS do GitHub do helper configurado no git.
+   * Essencial em ambientes Windows Server compartilhados onde vários alunos usam
+   * o mesmo Windows Credential Manager.
+   */
+  public async clearGitHubCredentials(username?: string): Promise<void> {
+    const lines = ['protocol=https', 'host=github.com'];
+    if (username) {
+      lines.push(`username=${username}`);
+    }
+    const input = lines.join('\n') + '\n\n';
+
+    try {
+      await this.executeGitWithStdin(['credential', 'reject'], input);
+      this.logger.info('Credenciais HTTPS do GitHub removidas do armazenamento local.');
+    } catch (error) {
+      this.logger.warn('Nao foi possivel remover credenciais HTTPS do GitHub.', error);
+    }
+  }
+
   public async getGlobalConfigValue(key: string): Promise<string | undefined> {
     const result = await this.executeGit(
       ['config', '--global', '--get', key],
@@ -151,6 +171,36 @@ export class GitService {
       this.logger.warn('Git nao encontrado ou nao acessivel pelo PATH.', error);
       return undefined;
     }
+  }
+
+  private async executeGitWithStdin(args: string[], stdinContent: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const child = spawn('git', args, { windowsHide: true });
+
+      let stderrOutput = '';
+      child.stderr?.on('data', (chunk: Buffer) => {
+        stderrOutput += chunk.toString();
+      });
+
+      child.on('close', (code) => {
+        if (code === 0 || code === null) {
+          resolve();
+        } else {
+          reject(
+            new Error(`git ${args.join(' ')} saiu com codigo ${code}: ${stderrOutput.trim()}`)
+          );
+        }
+      });
+
+      child.on('error', reject);
+
+      if (child.stdin) {
+        child.stdin.write(stdinContent, 'utf8');
+        child.stdin.end();
+      } else {
+        reject(new Error('stdin nao disponivel para o processo git credential'));
+      }
+    });
   }
 
   private async executeGit(

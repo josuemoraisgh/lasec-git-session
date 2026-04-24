@@ -12,6 +12,7 @@
 - Configura `git config --global user.name` e `git config --global user.email`.
 - Permite ver o status atual, trocar de aluno e encerrar a aula.
 - Remove a identidade global do Git ao encerrar a aula.
+- Tenta remover do VS Code a conta GitHub autenticada pela propria extensao.
 - Limpa a preferencia de sessao usada pela propria extensao, sem armazenar tokens manualmente.
 
 ## Estrutura do projeto
@@ -98,8 +99,10 @@ Nao e necessario abrir repositorio Git para iniciar a sessao.
    git config --global --unset-all user.email
    ```
 
-4. Se existirem algumas chaves globais extras ligadas a identidade, a extensao pode oferecer remocao com confirmacao explicita.
-5. O botao volta ao estado desconectado.
+4. A extensao tenta remover a conta GitHub usada por ela no menu de contas do VS Code.
+5. Se o VS Code pedir confirmacao de logout, confirme para concluir a remocao da conta.
+6. Se existirem algumas chaves globais extras ligadas a identidade, a extensao pode oferecer remocao com confirmacao explicita.
+7. O botao volta ao estado desconectado.
 
 ## Comandos disponiveis
 
@@ -118,11 +121,10 @@ Nao e necessario abrir repositorio Git para iniciar a sessao.
 
 ## Limitacoes conhecidas
 
-- A API publica de autenticacao do VS Code permite obter e usar a sessao GitHub, mas nao expoe um logout completo do provider para extensoes consumidoras.
-- Por isso, ao encerrar a aula, a extensao limpa:
-  - a identidade global do Git
-  - a preferencia de sessao usada pela propria extensao
-- Se a instituicao exigir logout completo do GitHub dentro do VS Code, isso ainda precisa ser feito manualmente pelo menu de contas do editor.
+- A API publica de autenticacao do VS Code permite obter e usar a sessao GitHub, mas nao expoe um metodo oficial para remover sessoes de contas.
+- Para o uso em laboratorio, a extensao tenta acionar o mesmo comando interno de logout usado pelo menu de contas do VS Code, sempre mirando a conta salva pela propria extensao.
+- Se esse comando interno nao estiver disponivel ou se o aluno cancelar a confirmacao do VS Code, a extensao informa o professor/aluno e oferece abrir o menu de contas para remocao manual.
+- A extensao nao tenta remover contas que nao foram autenticadas por ela.
 
 ## Uso em laboratorios compartilhados
 
