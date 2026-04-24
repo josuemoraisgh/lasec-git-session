@@ -2,7 +2,7 @@
   "name": "lasec-git-session",
   "displayName": "LasecGitSession",
   "description": "Extensao para laboratorios compartilhados que prepara e encerra com seguranca a sessao global de Git e GitHub de cada aluno.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "josuemoraisgh",
   "license": "MIT",
   "engines": {
